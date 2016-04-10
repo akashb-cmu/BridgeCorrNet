@@ -1,2 +1,7 @@
 *.pyc
 .idea/
+*.zip
+*.txt
+*gitignore*
+*MNIST_DIR*
+*TGT_DIR*
