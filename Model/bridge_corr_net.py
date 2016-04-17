@@ -294,7 +294,7 @@ class BridgeCorrNet(object):
         gradients = T.grad(cost, curr_params)
         updates = []
         for p, g, n in zip(curr_params, gradients, curr_param_names):
-            gr, upd = self.optimizer.get_grad_update(n, g)
+            gr, upd = self.optimizer.get_grad_update(n, g) # upd is empty list
             updates.append((p, p + gr))
             updates.extend(upd)
 
@@ -361,7 +361,7 @@ class BridgeCorrNet(object):
         updates = []
         for p, g, n in zip(curr_params, gradients, curr_param_names):
             gr, upd = self.optimizer.get_grad_update(n, g) # Just clips the gradient and multiplies the learning rate to
-            #  the gradients
+            #  the gradients. upd is empty list here
             updates.append((p, p + gr))
             updates.extend(upd)
 
@@ -442,7 +442,6 @@ class BridgeCorrNet(object):
 
     def reconstruct_from_sources(self, source_list):
         y = self.project_from_sources(source_list)
-
         recon_left = activation(T.dot(y, self.W_left_prime) + self.b_prime_left, self.output_activation)
         recon_right = activation(T.dot(y, self.W_right_prime) + self.b_prime_right, self.output_activation)
         recon_pivot = activation(T.dot(y, self.W_pivot_prime) + self.b_prime_pivot, self.output_activation)
@@ -504,11 +503,12 @@ def trainBridgeCorrNet(src_folder, tgt_folder, batch_size = 20, training_epochs=
     x_left = T.matrix('x_left')
     x_right = T.matrix('x_right')
     x_pivot = T.matrix('x_pivot')
+    # The above three theano tensors indicate the input to the Bridge Corr Net
 
     rng = numpy.random.RandomState(123)
     theano_rng = RandomStreams(rng.randint(2 ** 30))
 
-    n_visible_pivot = n_visible_right
+    n_visible_pivot = n_visible_left # Pivot = left view
 
     model = BridgeCorrNet()
     model.init(numpy_rng=rng, theano_rng=theano_rng, l_rate=l_rate, optimization=optimization, tied=tied,
@@ -524,17 +524,41 @@ def trainBridgeCorrNet(src_folder, tgt_folder, batch_size = 20, training_epochs=
     train_set_x_right = theano.shared(numpy.asarray(numpy.zeros((1000,n_visible_right)), dtype=theano.config.floatX), borrow=True)
     train_set_x_pivot = theano.shared(numpy.asarray(numpy.zeros((1000, n_visible_pivot)), dtype=theano.config.floatX),
                                       borrow=True)
+    # Note: The above theano shared variable assignments are just place holders and their actual values will be populated
+    # before actually calling the train method
 
-    #common_cost, common_updates = model.train_common("1111")
-    common_cost, common_updates = model.train_left_pivot("1111")
-    mtrain_common = theano.function([index], common_cost,updates=common_updates,givens=[(x_left, train_set_x_left[index * batch_size:(index + 1) * batch_size]),(x_pivot, train_set_x_pivot[index * batch_size:(index + 1) * batch_size])])
+    # common_cost, common_updates = model.train_common("1111")
+    common_cost, common_updates = model.train_right_pivot("1111")
+    mtrain_common = theano.function([index], common_cost,updates=common_updates,
+                                    givens=[(x_right, train_set_x_right[index * batch_size:(index + 1) * batch_size]),
+                                            (x_pivot, train_set_x_pivot[index * batch_size:(index + 1) * batch_size])])
 
-    left_cost, left_updates = model.train_left()
-    mtrain_left = theano.function([index], left_cost,updates=left_updates,givens=[(x_left, train_set_x_left[index * batch_size:(index + 1) * batch_size])])
+    right_cost, right_updates = model.train_right()
+    mtrain_right = theano.function([index], right_cost,updates=right_updates,givens=[(x_right, train_set_x_right[index * batch_size:(index + 1) * batch_size])])
 
     #pivot_cost, pivot_updates = model.train_right()
     pivot_cost, pivot_updates = model.train_pivot()
     mtrain_pivot = theano.function([index], pivot_cost,updates=pivot_updates,givens=[(x_pivot, train_set_x_pivot[index * batch_size:(index + 1) * batch_size])])
+
+    """
+        Note on what givens does:
+        Given usually takes a dict of { <tensor variable used in the model> : <value assigned to this tensor at run time/function call time
+                                                                               as a function of other variables/constants> }
+        Basically, it separates the actual tensor in the computation graph (part of the model definition) from a value to be
+        assigned to this variable (definition/assignment of the input variable).
+
+        Consequently, with the same model definition, using givens, at runtime we can substitute a node with a value that is
+        computed as a function of other (shared) variables, in this case: the input corresponding to that batch.
+
+        Why not just specify x_right/x_left/x_pivot as the input tensor to a theano compiled function and keep making calls to this
+        function by providing the appropriate batch training data matrix as the argument? Memory management can be optimized
+        by using a shared variable that will be loaded into the GPU initially, instead of passing a slice of data to the
+        theano function every time, which would require a transfer from CPU RAM to GPU each time. However, the model was defined
+        using x_right/x_left/x_pivot which are theano tensors. How do we make use of a shared variable to populate those tensors
+        without passing their value as input to the theano function? Using givens we can specify a slice of a theano shared variable (dataset)
+        to use for a specific function call, as a function of the batch index and the already loaded dataset living in a shared
+        variable on the GPU.
+    """
 
 
     diff = 0
@@ -554,29 +578,29 @@ def trainBridgeCorrNet(src_folder, tgt_folder, batch_size = 20, training_epochs=
                 if(next[1]=="dense"):
                     denseTheanoloader(next[2]+"_left",train_set_x_left,"float32")
                     denseTheanoloader(next[2]+"_right",train_set_x_right, "float32")
-                    denseTheanoloader(next[2] + "_right", train_set_x_pivot, "float32")
+                    denseTheanoloader(next[2] + "_left", train_set_x_pivot, "float32")
                 else:
                     sparseTheanoloader(next[2]+"_left",train_set_x_left,"float32",1000,n_visible_left)
                     sparseTheanoloader(next[2]+"_right",train_set_x_right, "float32", 1000, n_visible_right)
-                    sparseTheanoloader(next[2] + "_right", train_set_x_pivot, "float32", 1000, n_visible_pivot)
+                    sparseTheanoloader(next[2] + "_left", train_set_x_pivot, "float32", 1000, n_visible_pivot)
                 for batch_index in range(0,int(next[3])/batch_size):
                     c.append(mtrain_common(batch_index))
             elif(next[0]=="x"):
                 if(next[1]=="dense"):
                     denseTheanoloader(next[2]+"_left",train_set_x_left,"float32")
+                    denseTheanoloader(next[2] + "_left", train_set_x_pivot, "float32")
                 else:
                     sparseTheanoloader(next[2]+"_left",train_set_x_left,"float32",1000,n_visible_left)
+                    sparseTheanoloader(next[2] + "_left", train_set_x_pivot, "float32", 1000, n_visible_pivot)
                 for batch_index in range(0,int(next[3])/batch_size):
-                    c.append(mtrain_left(batch_index))
+                    c.append(mtrain_pivot(batch_index))
             elif(next[0]=="y"):
                 if(next[1]=="dense"):
                     denseTheanoloader(next[2]+"_right",train_set_x_right,"float32")
-                    denseTheanoloader(next[2] + "_right", train_set_x_pivot, "float32")
                 else:
                     sparseTheanoloader(next[2]+"_right",train_set_x_right,"float32",1000,n_visible_right)
-                    sparseTheanoloader(next[2] + "_right", train_set_x_pivot, "float32", 1000, n_visible_pivot)
                 for batch_index in range(0,int(next[3])/batch_size):
-                    c.append(mtrain_pivot(batch_index))
+                    c.append(mtrain_right(batch_index))
 
 
         if(flag==1):

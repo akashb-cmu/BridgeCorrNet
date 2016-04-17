@@ -5,6 +5,9 @@ import sys
 sys.path.append("../Model/")
 # from Model.bridge_corr_net import *
 from bridge_corr_net import *
+from mnist import *
+
+MNIST_DATA_PATH = "../mnist_images/"
 
 src_folder = sys.argv[1]+"matpic1/"
 tgt_folder = sys.argv[2]
@@ -21,6 +24,9 @@ lamda = 2
 hidden_activation = "sigmoid"
 output_activation = "sigmoid"
 loss_fn = "squarrederror"
+
+# train_mnist_images, train_mnist_labels = load_mnist(dataset="training", digits=None, path=MNIST_DATA_PATH, asbytes=False, selection=None, return_labels=True, return_indices=False)
+
 
 trainBridgeCorrNet(src_folder=src_folder, tgt_folder=tgt_folder, batch_size=batch_size,
              training_epochs=training_epochs, l_rate=l_rate, optimization=optimization,
