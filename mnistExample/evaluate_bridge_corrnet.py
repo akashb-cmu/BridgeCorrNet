@@ -5,6 +5,9 @@ import math
 from sklearn import svm
 from sklearn.metrics import accuracy_score
 import sys
+import pickle
+
+projected_views_folder = "./TGT_DIR/projected_views/"
 
 def svm_classifier(train_x, train_y, valid_x, valid_y, test_x, test_y):
 
@@ -77,9 +80,9 @@ def correlation(folder):
     y = numpy.load(folder+"valid-view2.npy")
     corr = 0
     for i in range(0,len(x[0])):
-        x1 = x[:,i] - (numpy.ones(len(x))*(sum(x[:,i])/len(x)))
-        x2 = y[:,i] - (numpy.ones(len(y))*(sum(y[:,i])/len(y)))
-        nr = sum(x1 * x2)/(math.sqrt(sum(x1*x1))*math.sqrt(sum(x2*x2)))
+        x1 = x[:,i] - (numpy.ones(len(x))*(sum(x[:,i])/len(x))) # mean centering
+        x2 = y[:,i] - (numpy.ones(len(y))*(sum(y[:,i])/len(y))) # mean centering
+        nr = sum(x1 * x2)/(math.sqrt(sum(x1*x1))*math.sqrt(sum(x2*x2))) # dividing by variance
         corr+=nr
     print corr
 
@@ -95,10 +98,46 @@ def correlation(folder):
     print corr
 
 
+def correlation_with_views(x, y):
+    x = numpy.array(x)
+    y = numpy.array(y)
+    corr = 0
+    for i in range(0,len(x[0])):
+        x1 = x[:,i] - (numpy.ones(len(x))*(sum(x[:,i])/len(x)))
+        x2 = y[:,i] - (numpy.ones(len(y))*(sum(y[:,i])/len(y)))
+        nr = sum(x1 * x2)/(math.sqrt(sum(x1*x1))*math.sqrt(sum(x2*x2)))
+        corr+=nr
+    print corr
+    return corr
 
-job = sys.argv[1]
+def read_projections(projected_views_folder, postfix):
+    left_projected_view = pickle.load(open(projected_views_folder +  "left_proj_view_" + postfix + ".pkl", "r"))
+    right_projected_view = pickle.load(open(projected_views_folder + "right_proj_view_" + postfix + ".pkl", "r"))
+    pivot_projected_view = pickle.load(open(projected_views_folder + "pivot_proj_view_" + postfix + ".pkl", "r"))
+    left_pivot_projection = pickle.load(open(projected_views_folder + "left_pivot_proj_view_" + postfix + ".pkl", "r"))
+    right_pivot_projection = pickle.load(open(projected_views_folder + "right_pivot_proj_view_" + postfix + ".pkl", "r"))
+    right_left_projection = pickle.load(open(projected_views_folder + "right_left_proj_view_" + postfix + ".pkl", "r"))
+    labels = pickle.load(open(projected_views_folder + "labels_" + postfix + ".pkl", "r"))
+    return([left_projected_view, right_projected_view, pivot_projected_view,
+            left_pivot_projection, right_pivot_projection, right_left_projection, labels])
 
-if job=="tl":
-    transfer_learning_5fold(sys.argv[2]+"project/")
-elif job=="corr":
-    correlation(sys.argv[2]+"project/")
+#
+# job = sys.argv[1]
+#
+# if job=="tl":
+#     transfer_learning_5fold(sys.argv[2]+"project/")
+# elif job=="corr":
+#     correlation(sys.argv[2]+"project/")
+
+[train_left_projected_view, train_right_projected_view, train_pivot_projected_view,
+ train_left_pivot_projection, train_right_pivot_projection, train_right_left_projection, train_labels] = read_projections(projected_views_folder, "train")
+
+[test_left_projected_view, test_right_projected_view, test_pivot_projected_view,
+ test_left_pivot_projection, test_right_pivot_projection, test_right_left_projection, test_labels] = read_projections(projected_views_folder, "test")
+
+correlation_with_views(test_left_projected_view, test_right_projected_view)
+correlation_with_views(test_left_projected_view, test_pivot_projected_view)
+correlation_with_views(test_right_projected_view, test_pivot_projected_view)
+correlation_with_views(test_left_pivot_projection, test_right_pivot_projection)
+correlation_with_views(test_left_pivot_projection, test_right_projected_view)
+correlation_with_views(test_right_pivot_projection, test_left_projected_view)

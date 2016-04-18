@@ -633,7 +633,7 @@ def trainBridgeCorrNet_with_mats(left_pivot_train=None, right_pivot_train=None, 
                        n_visible_pivot=None, lamda=5,
                        W_left=None, W_right=None, W_pivot=None, b=None, W_left_prime=None, W_right_prime=None,
                        W_pivot_prime=None, b_prime_left=None, b_prime_right=None, b_prime_pivot=None, hidden_activation="sigmoid",
-                       output_activation="sigmoid", loss_fn="squarrederror", tgt_folder="./"):
+                       output_activation="sigmoid", loss_fn="squarrederror", tgt_folder="./saved_model/"):
     """
     :param left_pivot_train: Dictionary {LEFT: left view train instances, PIVOT: pivot view train instances}
     :param right_pivot_train: Dictionary {RIGHT: right view train instances, PIVOT: pivot view train instances}
