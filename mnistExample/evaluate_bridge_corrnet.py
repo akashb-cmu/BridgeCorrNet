@@ -72,6 +72,56 @@ def transfer_learning_5fold(folder):
         acc += ta
     print acc/5
 
+def transfer_learning_5fold(view1, view2, labels):
+
+    perp = len(view1)/5
+
+    print "view1 to view2"
+
+    acc = 0
+    for i in range(0,5):
+        test_x = view2[i*perp:(i+1)*perp]
+        test_y = labels[i*perp:(i+1)*perp]
+        if i==0:
+            train_x = view1[perp:len(view1)]
+            train_y = labels[perp:len(view1)]
+        elif i==4:
+            train_x = view1[0:4*perp]
+            train_y = labels[0:4*perp]
+        else:
+            train_x1 = view1[0:i*perp]
+            train_y1 = labels[0:i*perp]
+            train_x2 = view1[(i+1)*perp:len(view1)]
+            train_y2 = labels[(i+1)*perp:len(view1)]
+            train_x = numpy.concatenate((train_x1,train_x2))
+            train_y = numpy.concatenate((train_y1,train_y2))
+        va, ta = svm_classifier(train_x, train_y, test_x, test_y, test_x, test_y)
+        acc += ta
+    print acc/5
+    print "view2 to view1"
+
+    acc = 0
+    for i in range(0,5):
+        test_x = view1[i*perp:(i+1)*perp]
+        test_y = labels[i*perp:(i+1)*perp]
+        if i==0:
+            train_x = view2[perp:len(view1)]
+            train_y = labels[perp:len(view1)]
+        elif i==4:
+            train_x = view2[0:4*perp]
+            train_y = labels[0:4*perp]
+        else:
+            train_x1 = view2[0:i*perp]
+            train_y1 = labels[0:i*perp]
+            train_x2 = view2[(i+1)*perp:len(view1)]
+            train_y2 = labels[(i+1)*perp:len(view1)]
+            train_x = numpy.concatenate((train_x1,train_x2))
+            train_y = numpy.concatenate((train_y1,train_y2))
+        va, ta = svm_classifier(train_x, train_y, test_x, test_y, test_x, test_y)
+        acc += ta
+    print acc/5
+
+
 
 def correlation(folder):
 
@@ -135,9 +185,21 @@ def read_projections(projected_views_folder, postfix):
 [test_left_projected_view, test_right_projected_view, test_pivot_projected_view,
  test_left_pivot_projection, test_right_pivot_projection, test_right_left_projection, test_labels] = read_projections(projected_views_folder, "test")
 
+print("Left_only and Right_only")
 correlation_with_views(test_left_projected_view, test_right_projected_view)
+transfer_learning_5fold(test_left_projected_view, test_right_projected_view, test_labels)
+print("Left_only and pivot_only")
 correlation_with_views(test_left_projected_view, test_pivot_projected_view)
+transfer_learning_5fold(test_left_projected_view, test_pivot_projected_view, test_labels)
+print("Right_only and pivot_only")
 correlation_with_views(test_right_projected_view, test_pivot_projected_view)
+transfer_learning_5fold(test_right_projected_view, test_pivot_projected_view, test_labels)
+print("Left_pivot and right_pivot")
 correlation_with_views(test_left_pivot_projection, test_right_pivot_projection)
+transfer_learning_5fold(test_left_pivot_projection, test_right_pivot_projection, test_labels)
+print("Left_pivot and right_only")
 correlation_with_views(test_left_pivot_projection, test_right_projected_view)
+transfer_learning_5fold(test_left_pivot_projection, test_right_projected_view, test_labels)
+print("Right_pivot and left_only")
 correlation_with_views(test_right_pivot_projection, test_left_projected_view)
+transfer_learning_5fold(test_right_pivot_projection, test_left_projected_view, test_labels)
