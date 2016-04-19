@@ -13,13 +13,16 @@ def create_folder(folder):
     if not os.path.exists(folder):
         os.makedirs(folder)
 
-
-
 # src_folder = sys.argv[1]+"matpic/"
 # tgt_folder = sys.argv[2]
-data_folder = "/home/akashb/Desktop/Acads/Sem2/Projects/WMT/Corr_net_author/CorrNet/mnistExample/generated_views/"
-model_folder = "/home/akashb/Desktop/Acads/Sem2/Projects/WMT/Corr_net_author/CorrNet/Model/saved_model/"
-projected_views_folder = "./TGT_DIR/projected_views/"
+
+data_folder = sys.argv[1]
+model_folder = sys.argv[2]
+projected_views_folder = sys.argv[3]
+
+# data_folder = "/home/akashb/Desktop/Acads/Sem2/Projects/WMT/Corr_net_author/CorrNet/mnistExample/generated_views/"
+# model_folder = "/home/akashb/Desktop/Acads/Sem2/Projects/WMT/Corr_net_author/CorrNet/Model/saved_model/"
+# projected_views_folder = "./TGT_DIR/projected_views/"
 
 LABELS_KEY = "labels"
 

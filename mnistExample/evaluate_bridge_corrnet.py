@@ -7,7 +7,8 @@ from sklearn.metrics import accuracy_score
 import sys
 import pickle
 
-projected_views_folder = "./TGT_DIR/projected_views/"
+# projected_views_folder = "./TGT_DIR/projected_views/"
+projected_views_folder = sys.argv[1]
 
 def svm_classifier(train_x, train_y, valid_x, valid_y, test_x, test_y):
 

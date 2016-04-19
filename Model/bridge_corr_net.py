@@ -2,7 +2,7 @@ __author__ = 'Akash'
 """
 Based on the two view CorrNet found at https://github.com/apsarath/CorrNet based on the paper: Correlation Neural Nets (http://arxiv.org/abs/1504.07225)
 
-This code extends the two view implementation to 3 view (and possibly n view) bridge correlation net (http://arxiv.org/abs/1510.03519)
+This code extends the CorrNet implementation to 3 view  bridge correlation net (http://arxiv.org/abs/1510.03519)
 """
 
 import time
@@ -90,10 +90,6 @@ class BridgeCorrNet(object):
         self.b_prime_pivot = self.Initializer.zero_vector("b_prime_pivot", b_prime_pivot, n_visible_pivot)
         self.optimizer.register_variable("b_prime_pivot", 1, n_visible_pivot)
 
-
-        """
-        Probably want to do something when a modality is missing
-        """
         if input_left is None:
             self.x_left = T.matrix(name='x_left')
         else:
@@ -133,7 +129,6 @@ class BridgeCorrNet(object):
         self.recon_from_right_pivot = theano.function([self.x_right, self.x_pivot], self.reconstruct_from_sources([RIGHT, PIVOT]))
         self.recon_from_right_left = theano.function([self.x_right, self.x_left], self.reconstruct_from_sources([RIGHT, LEFT]))
         self.recon_from_all = theano.function([self.x_right, self.x_left, self.x_pivot], self.reconstruct_from_sources([RIGHT, LEFT, PIVOT]))
-
 
         self.save_params()
 
@@ -180,7 +175,7 @@ class BridgeCorrNet(object):
         L_left_pivot = loss(z8_left, self.x_left, self.loss_fn) + loss(z8_right, self.x_right, self.loss_fn) + loss(z8_pivot,
                                                                                                           self.x_pivot,
                                                                                                           self.loss_fn)
-        #L3 = L_all_recon + L_pivot_only + L_right_left + L_right_pivot + L_left_pivot
+
         L3 = L_pivot_only + L_all_recon + L_right_left + L_right_pivot + L_left_pivot
 
         y1 = self.project_from_sources([LEFT])
@@ -696,9 +691,6 @@ def trainBridgeCorrNet_with_mats(left_pivot_train=None, right_pivot_train=None, 
                                       borrow=True)
     train_set_x_pivot = theano.shared(numpy.asarray(numpy.zeros((1000, n_visible_pivot)), dtype=theano.config.floatX),
                                       borrow=True)
-    # Dummy variables for input data. Borrow=true flag ensures the values can be updated later.
-
-    views = set()
 
     # Note: The above theano shared variable assignments are just place holders and their actual values will be populated
     # before actually calling the train method. This is also why borrow=True so that by changing the value of the nump mat
@@ -736,21 +728,31 @@ def trainBridgeCorrNet_with_mats(left_pivot_train=None, right_pivot_train=None, 
 
     """
         Note on what givens does:
-        Given usually takes a dict of { <tensor variable used in the model> : <value assigned to this tensor at run time/function call time
-                                                                               as a function of other variables/constants> }
-        Basically, it separates the actual tensor in the computation graph (part of the model definition) from a value to be
+        Given usually takes a dict of { <tensor variable used in the model> : <value assigned to this tensor at run
+        time/function call time
+                                                                               as a function of other
+                                                                               variables/constants> }
+        Basically, it separates the actual tensor in the computation graph (part of the model definition) from a
+        value to be
         assigned to this variable (definition/assignment of the input variable).
 
-        Consequently, with the same model definition, using givens, at runtime we can substitute a node with a value that is
+        Consequently, with the same model definition, using givens, at runtime we can substitute a node with a value
+        that is
         computed as a function of other (shared) variables, in this case: the input corresponding to that batch.
 
-        Why not just specify x_right/x_left/x_pivot as the input tensor to a theano compiled function and keep making calls to this
-        function by providing the appropriate batch training data matrix as the argument? Memory management can be optimized
+        Why not just specify x_right/x_left/x_pivot as the input tensor to a theano compiled function and keep making
+        calls to this
+        function by providing the appropriate batch training data matrix as the argument? Memory management can be
+        optimized
         by using a shared variable that will be loaded into the GPU initially, instead of passing a slice of data to the
-        theano function every time, which would require a transfer from CPU RAM to GPU each time. However, the model was defined
-        using x_right/x_left/x_pivot which are theano tensors. How do we make use of a shared variable to populate those tensors
-        without passing their value as input to the theano function? Using givens we can specify a slice of a theano shared variable (dataset)
-        to use for a specific function call, as a function of the batch index and the already loaded dataset living in a shared
+        theano function every time, which would require a transfer from CPU RAM to GPU each time. However,
+        the model was defined
+        using x_right/x_left/x_pivot which are theano tensors. How do we make use of a shared variable to populate
+        those tensors
+        without passing their value as input to the theano function? Using givens we can specify a slice of a theano
+        shared variable (dataset)
+        to use for a specific function call, as a function of the batch index and the already loaded dataset living
+        in a shared
         variable on the GPU.
     """
 
@@ -758,7 +760,6 @@ def trainBridgeCorrNet_with_mats(left_pivot_train=None, right_pivot_train=None, 
     flag = 1
     detfile = open(tgt_folder + "details.txt", "w")
     detfile.close()
-    oldtc = float("inf")
 
     for epoch in xrange(training_epochs):
 

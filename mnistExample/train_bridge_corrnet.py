@@ -1,4 +1,4 @@
-__author__ = 'Sarath'
+__author__ = 'Akash'
 import sys
 import numpy as np
 
@@ -8,13 +8,19 @@ from bridge_corr_net import *
 from mnist import *
 import pickle
 
-MNIST_DATA_PATH = "../mnist_images/"
-DATA_STORE_PATH = "/home/akashb/Desktop/Acads/Sem2/Projects/WMT/Corr_net_author/CorrNet/mnistExample/generated_views/"
+# MNIST_DATA_PATH = "../mnist_images/"
+# DATA_STORE_PATH = "/home/akashb/Desktop/Acads/Sem2/Projects/WMT/Corr_net_author/CorrNet/mnistExample/generated_views/"
 
 LABELS_KEY = "labels"
 
 # src_folder = sys.argv[1]+"matpic1/"
 # tgt_folder = sys.argv[2]
+
+MNIST_DATA_PATH = sys.argv[1]
+DATA_STORE_PATH = sys.argv[2]
+MODEL_PATH = sys.argv[3]
+
+# MODEL_PATH = "../Model/saved_model/"
 
 batch_size = 100
 training_epochs = 50
@@ -150,10 +156,22 @@ print(pivot_only.shape)
 #              n_hidden=n_hidden, lamda=lamda, hidden_activation=hidden_activation,
 #              output_activation=output_activation, loss_fn=loss_fn)
 
-trainBridgeCorrNet_with_mats(left_pivot_train=left_pivot, right_pivot_train=right_pivot, right_train=right_only, left_train=left_only,
-                                 pivot_train=pivot_only, all_train=all_train, batch_size=batch_size, training_epochs=training_epochs,
-                                 l_rate=l_rate, optimization=optimization, tied=tied, n_hidden=n_hidden, n_visible_left=n_visible_left,
-                                 n_visible_right=n_visible_right,
-                                 n_visible_pivot=n_visible_pivot, lamda=lamda,
-                                 hidden_activation=hidden_activation,
-                                 output_activation=output_activation, loss_fn=loss_fn, tgt_folder="../Model/saved_model/")
+# trainBridgeCorrNet_with_mats(left_pivot_train=left_pivot, right_pivot_train=right_pivot, right_train=right_only, left_train=left_only,
+#                                  pivot_train=pivot_only, all_train=all_train, batch_size=batch_size, training_epochs=training_epochs,
+#                                  l_rate=l_rate, optimization=optimization, tied=tied, n_hidden=n_hidden, n_visible_left=n_visible_left,
+#                                  n_visible_right=n_visible_right,
+#                                  n_visible_pivot=n_visible_pivot, lamda=lamda,
+#                                  hidden_activation=hidden_activation,
+#                                  output_activation=output_activation, loss_fn=loss_fn, tgt_folder="../Model/saved_model/")
+
+
+trainBridgeCorrNet_with_mats(left_pivot_train=left_pivot, right_pivot_train=right_pivot, right_train=right_only,
+                             left_train=left_only,
+                             pivot_train=pivot_only, all_train=all_train, batch_size=batch_size,
+                             training_epochs=training_epochs,
+                             l_rate=l_rate, optimization=optimization, tied=tied, n_hidden=n_hidden,
+                             n_visible_left=n_visible_left,
+                             n_visible_right=n_visible_right,
+                             n_visible_pivot=n_visible_pivot, lamda=lamda,
+                             hidden_activation=hidden_activation,
+                             output_activation=output_activation, loss_fn=loss_fn, tgt_folder=MODEL_PATH)
