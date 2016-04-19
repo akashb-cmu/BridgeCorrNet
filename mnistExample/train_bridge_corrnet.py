@@ -8,19 +8,11 @@ from bridge_corr_net import *
 from mnist import *
 import pickle
 
-# MNIST_DATA_PATH = "../mnist_images/"
-# DATA_STORE_PATH = "/home/akashb/Desktop/Acads/Sem2/Projects/WMT/Corr_net_author/CorrNet/mnistExample/generated_views/"
-
 LABELS_KEY = "labels"
-
-# src_folder = sys.argv[1]+"matpic1/"
-# tgt_folder = sys.argv[2]
 
 MNIST_DATA_PATH = sys.argv[1]
 DATA_STORE_PATH = sys.argv[2]
 MODEL_PATH = sys.argv[3]
-
-# MODEL_PATH = "../Model/saved_model/"
 
 batch_size = 100
 training_epochs = 50
@@ -89,45 +81,29 @@ tot_test_len = len(test_mnist_images)
 print(all_train_left.shape, all_train_right.shape, all_train_pivot.shape)
 all_train = {LEFT: all_train_left, RIGHT: all_train_right, PIVOT: all_train_pivot, LABELS_KEY: train_mnist_labels[:tot_train_len/6]}
 
-# [all_test_left, all_test_right, all_test_pivot] = get_views(test_mnist_images[:tot_test_len/6], views=[LEFT, RIGHT, PIVOT])
-# all_test = {LEFT: all_test_left, RIGHT: all_test_right, PIVOT: all_test_pivot, LABELS_KEY: test_mnist_labels[:tot_test_len/6]}
-
 n_visible_left = len(all_train_left[0])
 n_visible_right = len(all_train_right[0])
 n_visible_pivot = len(all_train_pivot[0])
 
 pickle.dump(all_train, open(DATA_STORE_PATH + "all_train.pkl", "w"))
-# pickle.dump(all_test, open(DATA_STORE_PATH + "all_test.pkl", "w"))
 
 [left_pivot_left, left_pivot_pivot] = get_views(train_mnist_images[tot_train_len/6:tot_train_len * 2/6], views=[LEFT, PIVOT])
 print(left_pivot_left.shape, left_pivot_pivot.shape)
 left_pivot = {LEFT: left_pivot_left, PIVOT: left_pivot_pivot}
 
-# [left_pivot_left_test, left_pivot_pivot_test] = get_views(test_mnist_images[tot_test_len/6:tot_test_len * 2/6], views=[LEFT, PIVOT])
-# left_pivot_test = {LEFT: left_pivot_left_test, PIVOT: left_pivot_pivot_test}
-
 pickle.dump(left_pivot, open(DATA_STORE_PATH + "left_pivot_train.pkl", "w"))
-# pickle.dump(left_pivot_test, open(DATA_STORE_PATH + "left_pivot_test.pkl", "w"))
 
 [right_pivot_right, right_pivot_pivot] = get_views(train_mnist_images[tot_train_len*2/6 : tot_train_len * 3/6], views=[RIGHT, PIVOT])
 print(right_pivot_right.shape, right_pivot_pivot.shape)
 right_pivot = {RIGHT: right_pivot_right, PIVOT: right_pivot_pivot}
 
-# [right_pivot_right_test, right_pivot_pivot_test] = get_views(test_mnist_images[tot_test_len*2/6 : tot_test_len * 3/6], views=[RIGHT, PIVOT])
-# right_pivot_test = {RIGHT: right_pivot_right_test, PIVOT: right_pivot_pivot_test}
-
 pickle.dump(right_pivot, open(DATA_STORE_PATH + "right_pivot_train.pkl", "w"))
-# pickle.dump(right_pivot_test, open(DATA_STORE_PATH + "right_pivot_test.pkl", "w"))
 
 [right_only] = get_views(train_mnist_images[tot_train_len*3/6 : tot_train_len * 4/6], views=[RIGHT])
 right_only_labels = train_mnist_labels[tot_train_len*3/6 : tot_train_len * 4/6]
 right_only_write = {RIGHT: right_only, LABELS_KEY: right_only_labels}
 pickle.dump(right_only_write, open(DATA_STORE_PATH + "right_only_train.pkl", "w"))
 
-# [right_only_test] = get_views(test_mnist_images[tot_test_len*3/6 : tot_test_len * 4/6], views=[RIGHT])
-
-# pickle.dump(right_only, open(DATA_STORE_PATH + "right_only_train.pkl", "w"))
-# pickle.dump(right_only_test, open(DATA_STORE_PATH + "right_only_test.pkl", "w"))
 print(right_only.shape)
 
 [left_only] = get_views(train_mnist_images[tot_train_len*4/6 : tot_train_len * 5/6], views=[LEFT])
@@ -135,35 +111,14 @@ left_only_labels = train_mnist_labels[tot_train_len*4/6 : tot_train_len * 5/6]
 left_only_write = {LEFT: left_only, LABELS_KEY: left_only_labels}
 pickle.dump(left_only_write, open(DATA_STORE_PATH + "left_only_train.pkl", "w"))
 
-# [left_only_test] = get_views(test_mnist_images[tot_test_len*4/6 : tot_test_len * 5/6], views=[LEFT])
-
-# pickle.dump(left_only, open(DATA_STORE_PATH + "left_only_train.pkl", "w"))
-# pickle.dump(left_only_test, open(DATA_STORE_PATH + "left_only_test.pkl", "w"))
 print(left_only.shape)
 
 [pivot_only] = get_views(train_mnist_images[tot_train_len*5/6 : ], views=[PIVOT])
 pivot_only_labels = train_mnist_labels[tot_train_len*5/6 : ]
 pivot_only_write = {PIVOT: pivot_only, LABELS_KEY: pivot_only_labels}
 pickle.dump(pivot_only_write, open(DATA_STORE_PATH + "pivot_only_train.pkl", "w"))
-# [pivot_only_test] = get_views(test_mnist_images[tot_test_len*5/6 : ], views=[PIVOT])
-# pickle.dump(pivot_only, open(DATA_STORE_PATH + "pivot_only_train.pkl", "w"))
-# pickle.dump(pivot_only_test, open(DATA_STORE_PATH + "pivot_only_test.pkl", "w"))
+
 print(pivot_only.shape)
-
-# trainBridgeCorrNet(src_folder=src_folder, tgt_folder=tgt_folder, batch_size=batch_size,
-#              training_epochs=training_epochs, l_rate=l_rate, optimization=optimization,
-#              tied=tied, n_visible_left=n_visible_left, n_visible_right=n_visible_right, n_visible_pivot=n_visible_right,
-#              n_hidden=n_hidden, lamda=lamda, hidden_activation=hidden_activation,
-#              output_activation=output_activation, loss_fn=loss_fn)
-
-# trainBridgeCorrNet_with_mats(left_pivot_train=left_pivot, right_pivot_train=right_pivot, right_train=right_only, left_train=left_only,
-#                                  pivot_train=pivot_only, all_train=all_train, batch_size=batch_size, training_epochs=training_epochs,
-#                                  l_rate=l_rate, optimization=optimization, tied=tied, n_hidden=n_hidden, n_visible_left=n_visible_left,
-#                                  n_visible_right=n_visible_right,
-#                                  n_visible_pivot=n_visible_pivot, lamda=lamda,
-#                                  hidden_activation=hidden_activation,
-#                                  output_activation=output_activation, loss_fn=loss_fn, tgt_folder="../Model/saved_model/")
-
 
 trainBridgeCorrNet_with_mats(left_pivot_train=left_pivot, right_pivot_train=right_pivot, right_train=right_only,
                              left_train=left_only,
